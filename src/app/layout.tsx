@@ -33,19 +33,10 @@ export default async function RootLayout({
           ) : (
             <div className="gate-container">
               <div className="gate-card">
-                <div className="gate-header">
-                  <div className="logo-badge">CI</div>
-                  <h1>CI Notes</h1>
-                  <p>Restricted Workspace</p>
-                </div>
+                <h1 className="gate-title">EI/HA notes</h1>
+                <p className="gate-subtitle">Sign in to access your dashboard</p>
                 <div className="gate-body">
-                  <p className="gate-warning">
-                    This application is private. Access is limited strictly to the designated email address. Attempting to log in with an unauthorized Google account will be rejected.
-                  </p>
                   <SignInButton />
-                </div>
-                <div className="gate-footer">
-                  <p>© 2026 CI Notes. Secure Auth Gate.</p>
                 </div>
               </div>
             </div>

@@ -91,69 +91,39 @@ a {
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
+  background: #090a0d;
 }
 
 .gate-card {
   width: 100%;
-  max-width: 440px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--border-radius-lg);
-  padding: 40px;
-  backdrop-filter: blur(16px);
-  box-shadow: var(--card-shadow);
+  max-width: 420px;
+  background: #17181c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 44px 36px;
   text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.gate-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at 50% 0%, var(--primary-glow) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.gate-content {
-  position: relative;
-  z-index: 1;
-}
-
-.logo-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 20px var(--primary-glow);
-}
-
-.logo-icon {
-  font-size: 28px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .gate-title {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #f1f5f9;
-  margin-bottom: 8px;
+  font-size: 34px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  line-height: 1.2;
 }
 
-.gate-description {
+.gate-subtitle {
   font-size: 14px;
-  color: var(--fg-muted);
-  line-height: 1.5;
-  margin-bottom: 32px;
+  font-weight: 400;
+  color: #94a3b8;
+  margin: 0 0 32px 0;
+  line-height: 1.4;
+}
+
+.gate-body {
+  width: 100%;
 }
 
 .signin-btn {
@@ -163,21 +133,21 @@ a {
   gap: 12px;
   width: 100%;
   padding: 14px 24px;
-  background: #2d3139;
-  color: #e2e8f0;
-  border: 1px solid #454c59;
-  border-radius: var(--border-radius-md);
+  background: #ffffff;
+  color: #0f172a;
+  border: none;
+  border-radius: 12px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: var(--transition-smooth);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .signin-btn:hover {
-  background: #373d47;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
 }
 
 .signin-btn:active {
