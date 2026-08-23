@@ -1,95 +1,51 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import clientPromise from '@/lib/db';
+import SignOutButton from '@/components/SignOutButton';
+import ThreePaneDashboard from '@/components/ThreePaneDashboard';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { ensureIndexes } from '@/lib/models';
 
-export default function Home() {
+async function initDatabase() {
+  try {
+    const client = await clientPromise;
+    const db = client.db();
+    await db.command({ ping: 1 });
+    // Ensure index on appId for issues and howtos collections
+    await ensureIndexes(db).catch((err) => console.warn('Index initialization notice:', err.message));
+    return { connected: true, message: 'MongoDB Atlas Active' };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'MongoDB Connection Error';
+    return { connected: false, message };
+  }
+}
+
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+  const dbStatus = await initDatabase();
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+    <main className="dashboard-container">
+      <header className="dashboard-header">
+        <div className="header-brand">
+          <span className="logo-badge-small">CI</span>
+          <div>
+            <h2>CI Notes Workstation</h2>
+            <p className="header-subtitle">Protected Application Workspace</p>
+          </div>
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <div className="user-profile">
+          <div className="status-indicator-inline" title={dbStatus.message}>
+            <span className={`status-dot ${dbStatus.connected ? 'connected' : 'disconnected'}`}></span>
+            <span className="status-label-sm">{dbStatus.message}</span>
+          </div>
+          <span className="user-email">{session?.user?.email}</span>
+          <SignOutButton />
+        </div>
+      </header>
+
+      <section className="dashboard-workspace">
+        <ThreePaneDashboard />
+      </section>
+    </main>
   );
 }
