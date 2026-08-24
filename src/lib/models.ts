@@ -107,7 +107,8 @@ export const DEFAULT_APP_SECTIONS: AppSection[] = [
       { name: 'Interface / HL7 Server', contentType: 'rtf', value: '', order: 3 },
       { name: 'Web Server', contentType: 'rtf', value: '', order: 4 },
       { name: 'Test / Dev Environment', contentType: 'rtf', value: '', order: 5 },
-      { name: 'Server How-To', contentType: 'rtf', value: '', order: 6 },
+      { name: 'Endpoint Devices', contentType: 'rtf', value: '', order: 6 },
+      { name: 'Server How-To', contentType: 'rtf', value: '', order: 7 },
     ],
   },
   {
