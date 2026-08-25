@@ -4,9 +4,80 @@ import { Db, ObjectId } from 'mongodb';
 // 1. Reusable Type: SubItem
 // ============================================================================
 
+export type KeyValueType = 'text' | 'object' | 'array';
+
+export interface ChildKeyValuePair {
+  key: string;
+  value: string;
+}
+
+export interface KeyValueComplexValueText {
+  type: 'text';
+  value: string;
+}
+
+export interface KeyValueComplexValueObject {
+  type: 'object';
+  value: ChildKeyValuePair[];
+}
+
+export interface KeyValueComplexValueArray {
+  type: 'array';
+  value: string[];
+}
+
+export type KeyValueComplexValue =
+  | KeyValueComplexValueText
+  | KeyValueComplexValueObject
+  | KeyValueComplexValueArray;
+
 export interface KeyValuePair {
   key: string;
-  value: string | number | boolean | null;
+  value: string | number | boolean | null | KeyValueComplexValue;
+}
+
+export interface NormalizedKeyValuePair {
+  key: string;
+  value: KeyValueComplexValue;
+}
+
+/**
+ * Normalizes legacy bare-string key-value pairs and new complex value shapes
+ * into a standardized NormalizedKeyValuePair.
+ */
+export function normalizeKeyValuePair(pair: KeyValuePair): NormalizedKeyValuePair {
+  const key = pair?.key || '';
+  const val = pair?.value;
+
+  if (val && typeof val === 'object' && 'type' in val && typeof val.type === 'string') {
+    const type = val.type as KeyValueType;
+    if (type === 'object') {
+      const rawChildren = Array.isArray(val.value) ? val.value : [];
+      const children: ChildKeyValuePair[] = rawChildren.map((c) => {
+        if (typeof c === 'object' && c !== null) {
+          const childObj = c as unknown as Record<string, unknown>;
+          return {
+            key: typeof childObj.key === 'string' ? childObj.key : '',
+            value: typeof childObj.value === 'string' ? childObj.value : String(childObj.value ?? ''),
+          };
+        }
+        return { key: '', value: String(c ?? '') };
+      });
+      return { key, value: { type: 'object', value: children } };
+    }
+
+    if (type === 'array') {
+      const rawItems = Array.isArray(val.value) ? val.value : [];
+      const items: string[] = rawItems.map((item) => String(item ?? ''));
+      return { key, value: { type: 'array', value: items } };
+    }
+
+    const strVal = typeof val.value === 'string' ? val.value : String(val.value ?? '');
+    return { key, value: { type: 'text', value: strVal } };
+  }
+
+  const strVal = typeof val === 'string' ? val : String(val ?? '');
+  return { key, value: { type: 'text', value: strVal } };
 }
 
 export interface TableData {

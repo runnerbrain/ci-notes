@@ -4,7 +4,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import DOMPurify from 'dompurify';
 import { PenLine, PanelRightClose } from 'lucide-react';
-import { SubItem, KeyValuePair, ContentType, TableData } from '@/lib/models';
+import {
+  SubItem,
+  KeyValuePair,
+  ContentType,
+  TableData,
+  KeyValueType,
+  NormalizedKeyValuePair,
+  normalizeKeyValuePair,
+} from '@/lib/models';
 import 'react-quill/dist/quill.snow.css';
 
 // Dynamic import for ReactQuill to support Next.js App Router SSR
@@ -62,7 +70,7 @@ export default function SubItemEditor({
   const [nameOrTitle, setNameOrTitle] = useState('');
   const [contentType, setContentType] = useState<ContentType>('rtf');
   const [stringValue, setStringValue] = useState('');
-  const [objectPairs, setObjectPairs] = useState<KeyValuePair[]>([]);
+  const [objectPairs, setObjectPairs] = useState<NormalizedKeyValuePair[]>([]);
   const [tableData, setTableData] = useState<TableData>({
     columns: ['Column 1', 'Column 2'],
     rows: [['', '']],
@@ -106,7 +114,8 @@ export default function SubItemEditor({
       const rws = Array.isArray(val?.rows) ? val!.rows : [['', '']];
       setTableData({ columns: cols, rows: rws });
     } else if (type === 'object') {
-      setObjectPairs(Array.isArray(subItem.value) ? subItem.value : []);
+      const rawPairs = Array.isArray(subItem.value) ? (subItem.value as KeyValuePair[]) : [];
+      setObjectPairs(rawPairs.map(normalizeKeyValuePair));
     } else {
       setStringValue(typeof subItem.value === 'string' ? subItem.value : '');
     }
@@ -124,17 +133,146 @@ export default function SubItemEditor({
 
   // Key-value pair handlers for edit mode
   const handleAddPair = () => {
-    setObjectPairs([...objectPairs, { key: '', value: '' }]);
-  };
-
-  const handleUpdatePair = (index: number, key: string, value: string) => {
-    const updated = [...objectPairs];
-    updated[index] = { key, value };
-    setObjectPairs(updated);
+    setObjectPairs([
+      ...objectPairs,
+      { key: '', value: { type: 'text', value: '' } },
+    ]);
   };
 
   const handleRemovePair = (index: number) => {
     setObjectPairs(objectPairs.filter((_, i) => i !== index));
+  };
+
+  const handleUpdatePairKey = (index: number, key: string) => {
+    const updated = [...objectPairs];
+    updated[index] = { ...updated[index], key };
+    setObjectPairs(updated);
+  };
+
+  const handleUpdatePairType = (index: number, type: KeyValueType) => {
+    const updated = [...objectPairs];
+    const currentVal = updated[index].value;
+    if (currentVal.type === type) return;
+
+    if (type === 'text') {
+      updated[index] = {
+        ...updated[index],
+        value: { type: 'text', value: '' },
+      };
+    } else if (type === 'object') {
+      updated[index] = {
+        ...updated[index],
+        value: { type: 'object', value: [{ key: '', value: '' }] },
+      };
+    } else if (type === 'array') {
+      updated[index] = {
+        ...updated[index],
+        value: { type: 'array', value: [''] },
+      };
+    }
+    setObjectPairs(updated);
+  };
+
+  const handleUpdatePairTextValue = (index: number, val: string) => {
+    const updated = [...objectPairs];
+    updated[index] = {
+      ...updated[index],
+      value: { type: 'text', value: val },
+    };
+    setObjectPairs(updated);
+  };
+
+  const handleAddChildPair = (parentIndex: number) => {
+    const updated = [...objectPairs];
+    const parentVal = updated[parentIndex].value;
+    if (parentVal.type === 'object') {
+      updated[parentIndex] = {
+        ...updated[parentIndex],
+        value: {
+          type: 'object',
+          value: [...parentVal.value, { key: '', value: '' }],
+        },
+      };
+      setObjectPairs(updated);
+    }
+  };
+
+  const handleUpdateChildPair = (
+    parentIndex: number,
+    childIndex: number,
+    childKey: string,
+    childVal: string
+  ) => {
+    const updated = [...objectPairs];
+    const parentVal = updated[parentIndex].value;
+    if (parentVal.type === 'object') {
+      const newChildren = [...parentVal.value];
+      newChildren[childIndex] = { key: childKey, value: childVal };
+      updated[parentIndex] = {
+        ...updated[parentIndex],
+        value: { type: 'object', value: newChildren },
+      };
+      setObjectPairs(updated);
+    }
+  };
+
+  const handleRemoveChildPair = (parentIndex: number, childIndex: number) => {
+    const updated = [...objectPairs];
+    const parentVal = updated[parentIndex].value;
+    if (parentVal.type === 'object') {
+      const newChildren = parentVal.value.filter((_, i) => i !== childIndex);
+      updated[parentIndex] = {
+        ...updated[parentIndex],
+        value: { type: 'object', value: newChildren },
+      };
+      setObjectPairs(updated);
+    }
+  };
+
+  const handleAddItem = (parentIndex: number) => {
+    const updated = [...objectPairs];
+    const parentVal = updated[parentIndex].value;
+    if (parentVal.type === 'array') {
+      updated[parentIndex] = {
+        ...updated[parentIndex],
+        value: {
+          type: 'array',
+          value: [...parentVal.value, ''],
+        },
+      };
+      setObjectPairs(updated);
+    }
+  };
+
+  const handleUpdateItem = (
+    parentIndex: number,
+    itemIndex: number,
+    itemVal: string
+  ) => {
+    const updated = [...objectPairs];
+    const parentVal = updated[parentIndex].value;
+    if (parentVal.type === 'array') {
+      const newItems = [...parentVal.value];
+      newItems[itemIndex] = itemVal;
+      updated[parentIndex] = {
+        ...updated[parentIndex],
+        value: { type: 'array', value: newItems },
+      };
+      setObjectPairs(updated);
+    }
+  };
+
+  const handleRemoveItem = (parentIndex: number, itemIndex: number) => {
+    const updated = [...objectPairs];
+    const parentVal = updated[parentIndex].value;
+    if (parentVal.type === 'array') {
+      const newItems = parentVal.value.filter((_, i) => i !== itemIndex);
+      updated[parentIndex] = {
+        ...updated[parentIndex],
+        value: { type: 'array', value: newItems },
+      };
+      setObjectPairs(updated);
+    }
   };
 
   // Table Editor Handlers
@@ -301,12 +439,43 @@ export default function SubItemEditor({
           ) : contentType === 'object' ? (
             <table className="read-only-kv-table">
               <tbody>
-                {objectPairs.map((pair, idx) => (
-                  <tr key={idx}>
-                    <td className="kv-key">{pair.key}</td>
-                    <td className="kv-value">{String(pair.value ?? '')}</td>
-                  </tr>
-                ))}
+                {objectPairs.map((pair, idx) => {
+                  const val = pair.value;
+                  return (
+                    <tr key={idx}>
+                      <td className="kv-key">{pair.key}</td>
+                      <td className="kv-value">
+                        {val.type === 'text' && <span>{val.value}</span>}
+                        {val.type === 'object' && (
+                          <div className="kv-nested-object">
+                            {val.value.length === 0 ? (
+                              <span className="kv-empty-nested">(empty)</span>
+                            ) : (
+                              val.value.map((child, cIdx) => (
+                                <div key={cIdx} className="kv-nested-row">
+                                  <span className="kv-child-key">{child.key}</span>
+                                  <span className="kv-colon">:</span>
+                                  <span className="kv-child-value">{child.value}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                        {val.type === 'array' && (
+                          <ul className="kv-nested-list">
+                            {val.value.length === 0 ? (
+                              <li className="kv-empty-nested">(empty list)</li>
+                            ) : (
+                              val.value.map((item, iIdx) => (
+                                <li key={iIdx}>{item}</li>
+                              ))
+                            )}
+                          </ul>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           ) : (
@@ -395,7 +564,7 @@ export default function SubItemEditor({
           <div className="object-pairs-editor">
             <div className="pairs-header">
               <label className="input-label">Key-Value Pairs:</label>
-              <button className="add-row-btn" onClick={handleAddPair}>
+              <button type="button" className="add-row-btn" onClick={handleAddPair}>
                 + Add Pair
               </button>
             </div>
@@ -406,34 +575,136 @@ export default function SubItemEditor({
               </div>
             ) : (
               <div className="pairs-list">
-                {objectPairs.map((pair, idx) => (
-                  <div key={idx} className="pair-row">
-                    <input
-                      type="text"
-                      className="pair-key-input"
-                      placeholder="Key"
-                      value={pair.key}
-                      onChange={(e) =>
-                        handleUpdatePair(idx, e.target.value, String(pair.value ?? ''))
-                      }
-                    />
-                    <span className="pair-colon">:</span>
-                    <input
-                      type="text"
-                      className="pair-val-input"
-                      placeholder="Value"
-                      value={String(pair.value ?? '')}
-                      onChange={(e) => handleUpdatePair(idx, pair.key, e.target.value)}
-                    />
-                    <button
-                      className="remove-pair-btn"
-                      onClick={() => handleRemovePair(idx)}
-                      title="Remove Row"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                {objectPairs.map((pair, idx) => {
+                  const valType = pair.value.type;
+                  return (
+                    <div key={idx} className="pair-card">
+                      <div className="pair-row-header">
+                        <input
+                          type="text"
+                          className="pair-key-input"
+                          placeholder="Key"
+                          value={pair.key}
+                          onChange={(e) => handleUpdatePairKey(idx, e.target.value)}
+                        />
+                        <select
+                          className="pair-type-select"
+                          value={valType}
+                          onChange={(e) =>
+                            handleUpdatePairType(idx, e.target.value as KeyValueType)
+                          }
+                        >
+                          <option value="text">Text</option>
+                          <option value="object">Nested pairs</option>
+                          <option value="array">List</option>
+                        </select>
+
+                        {valType === 'text' && (
+                          <>
+                            <span className="pair-colon">:</span>
+                            <input
+                              type="text"
+                              className="pair-val-input"
+                              placeholder="Value"
+                              value={pair.value.value}
+                              onChange={(e) =>
+                                handleUpdatePairTextValue(idx, e.target.value)
+                              }
+                            />
+                          </>
+                        )}
+
+                        <button
+                          type="button"
+                          className="remove-pair-btn"
+                          onClick={() => handleRemovePair(idx)}
+                          title="Remove Row"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* Nested Pairs Option */}
+                      {valType === 'object' && (
+                        <div className="pair-nested-container">
+                          {pair.value.value.map((child, cIdx) => (
+                            <div key={cIdx} className="pair-child-row">
+                              <input
+                                type="text"
+                                className="pair-key-input pair-child-input"
+                                placeholder="Child Key"
+                                value={child.key}
+                                onChange={(e) =>
+                                  handleUpdateChildPair(idx, cIdx, e.target.value, child.value)
+                                }
+                              />
+                              <span className="pair-colon">:</span>
+                              <input
+                                type="text"
+                                className="pair-val-input pair-child-input"
+                                placeholder="Child Value"
+                                value={child.value}
+                                onChange={(e) =>
+                                  handleUpdateChildPair(idx, cIdx, child.key, e.target.value)
+                                }
+                              />
+                              <button
+                                type="button"
+                                className="remove-pair-btn"
+                                onClick={() => handleRemoveChildPair(idx, cIdx)}
+                                title="Remove Child Pair"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            className="btn-add-child"
+                            onClick={() => handleAddChildPair(idx)}
+                          >
+                            + Add Child Pair
+                          </button>
+                        </div>
+                      )}
+
+                      {/* List Option */}
+                      {valType === 'array' && (
+                        <div className="pair-nested-container">
+                          {pair.value.value.map((item, iIdx) => (
+                            <div key={iIdx} className="pair-child-row">
+                              <span className="pair-bullet">•</span>
+                              <input
+                                type="text"
+                                className="pair-val-input pair-child-input"
+                                placeholder="List item..."
+                                value={item}
+                                onChange={(e) =>
+                                  handleUpdateItem(idx, iIdx, e.target.value)
+                                }
+                              />
+                              <button
+                                type="button"
+                                className="remove-pair-btn"
+                                onClick={() => handleRemoveItem(idx, iIdx)}
+                                title="Remove Item"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            className="btn-add-child"
+                            onClick={() => handleAddItem(idx)}
+                          >
+                            + Add Item
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

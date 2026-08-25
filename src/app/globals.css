@@ -1039,6 +1039,83 @@ a {
   color: var(--danger);
 }
 
+.pair-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius-sm);
+  padding: 10px;
+  gap: 8px;
+}
+
+.pair-row-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pair-type-select {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius-sm);
+  color: #f1f5f9;
+  padding: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pair-type-select option {
+  background: #1e2227;
+  color: #f1f5f9;
+}
+
+.pair-nested-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 16px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(255, 255, 255, 0.12);
+  margin-top: 4px;
+}
+
+.pair-child-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pair-child-input {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.pair-bullet {
+  color: var(--fg-muted);
+  font-size: 14px;
+  padding-left: 4px;
+}
+
+.btn-add-child {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg-muted);
+  border: 1px dashed var(--card-border);
+  padding: 3px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 11px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-add-child:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
 .editor-footer {
   display: flex;
   justify-content: space-between;
@@ -1262,6 +1339,49 @@ a {
 
 .read-only-kv-table .kv-value {
   color: #94a3b8;
+}
+
+.kv-nested-object {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 4px;
+}
+
+.kv-nested-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.kv-child-key {
+  font-weight: 500;
+  color: #cbd5e1;
+}
+
+.kv-colon {
+  color: var(--fg-muted);
+}
+
+.kv-child-value {
+  color: #94a3b8;
+}
+
+.kv-nested-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #94a3b8;
+}
+
+.kv-nested-list li {
+  margin-bottom: 2px;
+}
+
+.kv-empty-nested {
+  font-style: italic;
+  color: var(--fg-muted);
+  font-size: 12px;
 }
 
 /* ========================================================================= */
